@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class InstagramPost(RemoteMedia):
     caption: Optional[str] = None
-    url: Optional[HttpUrl] = Field(default=None, validation_alias="media_url")
+    url: HttpUrl = Field(validation_alias="media_url")
     timestamp: Optional[datetime] = None
     media_type: Optional[str] = None
     id: str
@@ -32,7 +32,8 @@ def retrieve_posts(organization: str):
     )
     data = response.json()
     if response.ok:
-        for post in data["business_discovery"]["media"]["data"]:
+        posts = data["business_discovery"]["media"]["data"]
+        for post in filter(lambda x: "media_url" in x, posts):
             instagram_post = InstagramPost(**post)
             yield instagram_post
     else:
