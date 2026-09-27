@@ -4,6 +4,7 @@ import sys
 
 from core.exceptions import APIException
 from core.pipelines.content import retrieve_media
+from core.llm.llama import describe_concert_flyer
 from insta_api.retrieve_posts import retrieve_posts
 
 parser = argparse.ArgumentParser(
@@ -24,9 +25,10 @@ if __name__ == "__main__":
     for account in args.account:
         posts = retrieve_posts(account)
         for post in posts:
-            filename = f"{args.folder}/{post.id}.jpg"
-            with open(filename, "wb") as f:
-                try:
-                    retrieve_media(post, f)
-                except APIException as e:
-                    log.warning(e)
+            print(describe_concert_flyer(post))
+            # filename = f"{args.folder}/{post.id}.jpg"
+            # with open(filename, "wb") as f:
+                # try:
+                    # retrieve_media(post, f)
+                # except APIException as e:
+                    # log.warning(e)
