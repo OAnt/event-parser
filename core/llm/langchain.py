@@ -28,4 +28,5 @@ def describe_concert_flyer(media: RemoteMedia):
         HumanMessage(content=get_user_message(media)),
     ]
     response = structured_llm.invoke(messages)
+    print(response)
     return response["data"]

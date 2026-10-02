@@ -2,7 +2,7 @@ from llama_cpp import Llama
 from llama_cpp.llama_chat_format import MTMDChatHandler
 
 from core.models.content import RemoteMedia
-from core.llm.common import SYSTEM_PROMPT, get_user_message
+from core.llm.common import SYSTEM_PROMPT, JSON_SCHEMA, get_user_message
 
 _llm = None
 
@@ -44,5 +44,10 @@ def describe_concert_flyer(media: RemoteMedia):
     ]
     message = llm.create_chat_completion(
         messages,
+        response_format={
+            "type": "json_object",
+            "schema": JSON_SCHEMA,
+        }
     )
+    print(message)
     return message["choices"][0]["message"]["content"]

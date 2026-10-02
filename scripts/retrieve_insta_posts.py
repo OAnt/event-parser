@@ -4,7 +4,7 @@ import sys
 
 from core.exceptions import APIException
 from core.pipelines.content import retrieve_media
-from core.llm.langchain import describe_concert_flyer
+from core.llm.llama import describe_concert_flyer
 from insta_api.retrieve_posts import retrieve_posts
 
 parser = argparse.ArgumentParser(
