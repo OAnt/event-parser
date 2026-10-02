@@ -1,3 +1,4 @@
+from core.models.content import RemoteMedia
 
 SYSTEM_PROMPT = """
 You are an assistant expert at describing concert flyers
@@ -14,3 +15,8 @@ You return always return a list, each item is a concert on the flyer
 You return an empty object if the image is not a concert flyer or is unavailable
 """
 
+def get_user_message(media: RemoteMedia):
+    return [
+        {"type": "text", "text": "Describe the image"},
+        {"type": "image_url", "image_url": {"url": str(media.url)}},
+    ]

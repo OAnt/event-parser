@@ -2,7 +2,7 @@ from llama_cpp import Llama
 from llama_cpp.llama_chat_format import MTMDChatHandler
 
 from core.models.content import RemoteMedia
-from core.llm.common import SYSTEM_PROMPT
+from core.llm.common import SYSTEM_PROMPT, get_user_message
 
 _llm = None
 
@@ -39,10 +39,7 @@ def describe_concert_flyer(media: RemoteMedia):
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": [
-                {"type": "text", "text": "Describe the image"},
-                {"type": "image_url", "image_url": {"url": str(media.url)}},
-            ],
+            "content": get_user_message(media),
         }
     ]
     message = llm.create_chat_completion(
