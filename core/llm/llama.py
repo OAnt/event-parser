@@ -49,5 +49,4 @@ def describe_concert_flyer(media: RemoteMedia):
             "schema": JSON_SCHEMA,
         }
     )
-    print(message)
     return message["choices"][0]["message"]["content"]
