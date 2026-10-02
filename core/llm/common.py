@@ -1,5 +1,26 @@
 from core.models.content import RemoteMedia
 
+JSON_SCHEMA = {
+    "title": "Flyer",
+    "type": "object",
+    "properties": {
+        "concerts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "venue": {"type": "string"},
+                    "date": {"type": "string"},
+                    "performers": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+            },
+        },
+    },
+}
+
 SYSTEM_PROMPT = """
 You are an assistant expert at describing concert flyers
 You extract semantic information and return it as directly usable json
