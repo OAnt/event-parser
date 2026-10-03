@@ -1,0 +1,23 @@
+networks:
+  event-parser: {}
+
+services:
+  redis:
+    image: redis:8.10
+    ports:
+      - 6379:6379
+    networks:
+      - event-parser
+  worker:
+    build:
+      dockerfile: evp/dockerfiles/worker/Dockerfile
+      context: .
+      args:
+        ROCM_ARCH: gfx1010
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    security_opt:
+      - "seccomp=unconfined"
+    networks:
+      - event-parser

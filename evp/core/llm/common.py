@@ -1,4 +1,4 @@
-from core.models.content import RemoteMedia
+from evp.core.models.content import RemoteMedia
 
 JSON_SCHEMA = {
     "type": "object",

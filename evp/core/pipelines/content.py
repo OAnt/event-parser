@@ -1,7 +1,7 @@
 from typing import Protocol
 import requests
 
-from core.models.content import RemoteMedia
+from evp.core.models.content import RemoteMedia
 
 
 class Writable(Protocol):

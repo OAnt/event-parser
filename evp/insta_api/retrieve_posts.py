@@ -5,9 +5,9 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, HttpUrl, Field
 
-from insta_api import conf
-from core.exceptions import APIException
-from core.models.content import RemoteMedia
+from evp.insta_api import conf
+from evp.core.exceptions import APIException
+from evp.core.models.content import RemoteMedia
 
 
 log = logging.getLogger(__name__)

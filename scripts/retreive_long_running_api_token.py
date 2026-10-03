@@ -2,7 +2,7 @@ import argparse
 import os
 import requests
 
-from insta_api import conf
+from evp.insta_api import conf
 
 parser = argparse.ArgumentParser(
     prog="fb-token-retriever",

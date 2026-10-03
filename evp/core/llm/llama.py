@@ -1,8 +1,8 @@
 from llama_cpp import Llama
 from llama_cpp.llama_chat_format import MTMDChatHandler
 
-from core.models.content import RemoteMedia
-from core.llm.common import SYSTEM_PROMPT, JSON_SCHEMA, get_user_message
+from evp.core.models.content import RemoteMedia
+from evp.core.llm.common import SYSTEM_PROMPT, JSON_SCHEMA, get_user_message
 
 _llm = None
 
@@ -22,7 +22,6 @@ def get_llm() -> Llama:
             chat_handler=chat_handler,
             chat_format="mtmd",
             n_ctx=4096,
-            n_gpu_layers=-1,
         )
         # _llm = Llama.from_pretrained(
             # repo_id="mistralai/Ministral-3-3B-Instruct-2512-GGUF",

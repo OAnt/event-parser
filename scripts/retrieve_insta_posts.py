@@ -2,10 +2,10 @@ import argparse
 import logging
 import sys
 
-from core.exceptions import APIException
-from core.pipelines.content import retrieve_media
-from core.llm.llama import describe_concert_flyer_2
-from insta_api.retrieve_posts import retrieve_posts
+from evp.core.exceptions import APIException
+from evp.core.pipelines.content import retrieve_media
+from evp.core.llm.llama import describe_concert_flyer_2
+from evp.insta_api.retrieve_posts import retrieve_posts
 
 parser = argparse.ArgumentParser(
     prog="post-retriever",
