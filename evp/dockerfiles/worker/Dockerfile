@@ -16,7 +16,7 @@ RUN apt-get update \
     amdrocm10.0-${ROCM_ARCH} \
     amdrocm-core-sdk10.0-${ROCM_ARCH} \
     && rm -rf /var/lib/apt/lists
-COPY evp /app/
+COPY evp /app/evp
 COPY poetry.lock /app/
 COPY pyproject.toml /app/
 WORKDIR /app/
