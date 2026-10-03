@@ -22,3 +22,4 @@ COPY pyproject.toml /app/
 WORKDIR /app/
 ENV CMAKE_ARGS="-DGGML_HIP=on"
 RUN poetry install --no-root
+ENV LD_LIBRARY_PATH="/opt/rocm/lib:$LD_LIBRARY_PATH"

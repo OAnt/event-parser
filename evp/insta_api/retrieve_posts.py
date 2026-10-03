@@ -5,7 +5,7 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, HttpUrl, Field
 
-from evp.insta_api import conf
+from evp import conf
 from evp.core.exceptions import APIException
 from evp.core.models.content import RemoteMedia
 
