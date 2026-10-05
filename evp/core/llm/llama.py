@@ -3,7 +3,8 @@ from llama_cpp.llama_chat_format import MTMDChatHandler
 
 from evp import conf
 from evp.core.models.content import RemoteMedia
-from evp.core.llm.common import SYSTEM_PROMPT, JSON_SCHEMA, get_user_message
+from evp.core.models.events import Flyer
+from evp.core.llm.common import SYSTEM_PROMPT, get_user_message
 
 _llm = None
 
@@ -35,10 +36,10 @@ def describe_concert_flyer(media: RemoteMedia):
         messages,
         response_format={
             "type": "json_object",
-            "schema": JSON_SCHEMA,
+            "schema": Flyer.model_json_schema(),
         }
     )
-    return message["choices"][0]["message"]["content"]
+    return Flyer.model_validate_json(message["choices"][0]["message"]["content"])
 
 SYSTEM_PROMPT_2_A = """
 You are an assistant expert at describing event flyers

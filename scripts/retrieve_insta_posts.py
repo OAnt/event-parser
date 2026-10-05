@@ -4,7 +4,7 @@ import sys
 
 from evp.core.exceptions import APIException
 from evp.core.pipelines.content import retrieve_media
-from evp.core.llm.llama import describe_concert_flyer_2
+from evp.core.llm.llama import describe_concert_flyer
 from evp.insta_api.retrieve_posts import retrieve_posts
 
 parser = argparse.ArgumentParser(
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     for account in args.account:
         posts = retrieve_posts(account)
         for post in posts:
-            print(describe_concert_flyer_2(post))
+            print(describe_concert_flyer(post))
             # filename = f"{args.folder}/{post.id}.jpg"
             # with open(filename, "wb") as f:
                 # try:

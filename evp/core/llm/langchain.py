@@ -7,14 +7,6 @@ from pydantic import BaseModel
 from evp.core.models.content import RemoteMedia
 from evp.core.llm.common import SYSTEM_PROMPT, JSON_SCHEMA, get_user_message
 
-class Concert(BaseModel):
-    venue: str
-    date: str
-    performers: List[str]
-
-class Flyer(BaseModel):
-    concerts: List[Concert]
-
 def describe_concert_flyer(media: RemoteMedia):
     llm = ChatOpenAI(
         base_url="http://localhost:8000/v1",
