@@ -1,22 +1,19 @@
 import logging
-from datetime import datetime
 from typing import Optional
 
 import requests
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import Field
 
 from evp import conf
 from evp.core.exceptions import APIException
-from evp.core.models.content import RemoteMedia
+from evp.core.models.content import Post, RemoteMedia
 
 
 log = logging.getLogger(__name__)
 
 
-class InstagramPost(RemoteMedia):
-    caption: Optional[str] = None
-    url: HttpUrl = Field(validation_alias="media_url")
-    timestamp: Optional[datetime] = None
+class InstagramPost(Post):
+    description: Optional[str] = Field(validation_alias="caption")
     media_type: Optional[str] = None
     id: str
 
@@ -34,7 +31,8 @@ def retrieve_posts(organization: str):
     if response.ok:
         posts = data["business_discovery"]["media"]["data"]
         for post in filter(lambda x: "media_url" in x, posts):
-            instagram_post = InstagramPost(**post)
+            media = RemoteMedia(url=post.pop("media_url"))
+            instagram_post = InstagramPost(media=media, **post)
             yield instagram_post
     else:
         raise APIException(data["error"])

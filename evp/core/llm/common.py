@@ -1,5 +1,5 @@
 from typing import Union
-from evp.core.models.content import RemoteMedia, LocalMedia
+from evp.core.models.content import Post
 
 JSON_SCHEMA = {
     "type": "object",
@@ -38,10 +38,22 @@ The json schema should be:
 }
 You return always return a list, each item is a concert on the flyer
 You return an empty object if the image is not a concert flyer or is unavailable
+The organizer may have added a description for the event.
+It is commonly accepted that an event takes place after it is published...
 """
 
-def get_user_message(media: Union[RemoteMedia, LocalMedia]):
-    return [
-        {"type": "text", "text": "Describe the image"},
-        {"type": "image_url", "image_url": {"url": str(media.url)}},
-    ]
+def get_user_message(post: Post):
+    base_message = []
+    if post.description:
+        base_message.append(
+            {"type": "text", "text": f"Additional description: {post.description}\n"}
+        )
+    if post.timestamp:
+        base_message.append(
+            {"type": "text", "text": f"Published: {post.timestamp.date().isoformat()}\n"}
+        )
+    base_message.extend([
+        {"type": "text", "text": "Describe the image\n"},
+        {"type": "image_url", "image_url": {"url": str(post.media.url)}},
+    ])
+    return base_message
