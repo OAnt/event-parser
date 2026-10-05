@@ -1,8 +1,10 @@
+from typing import Union
+
 from llama_cpp import Llama
 from llama_cpp.llama_chat_format import MTMDChatHandler
 
 from evp import conf
-from evp.core.models.content import RemoteMedia
+from evp.core.models.content import RemoteMedia, LocalMedia
 from evp.core.models.events import Flyer
 from evp.core.llm.common import SYSTEM_PROMPT, get_user_message
 
@@ -23,7 +25,7 @@ def get_llm() -> Llama:
         )
     return _llm
 
-def describe_concert_flyer(media: RemoteMedia):
+def describe_concert_flyer(media: Union[RemoteMedia, LocalMedia]):
     llm = get_llm()
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},

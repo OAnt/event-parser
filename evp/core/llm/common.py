@@ -1,4 +1,5 @@
-from evp.core.models.content import RemoteMedia
+from typing import Union
+from evp.core.models.content import RemoteMedia, LocalMedia
 
 JSON_SCHEMA = {
     "type": "object",
@@ -39,7 +40,7 @@ You return always return a list, each item is a concert on the flyer
 You return an empty object if the image is not a concert flyer or is unavailable
 """
 
-def get_user_message(media: RemoteMedia):
+def get_user_message(media: Union[RemoteMedia, LocalMedia]):
     return [
         {"type": "text", "text": "Describe the image"},
         {"type": "image_url", "image_url": {"url": str(media.url)}},
