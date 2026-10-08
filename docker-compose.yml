@@ -1,0 +1,35 @@
+networks:
+  event-parser: {}
+
+services:
+  redis:
+    image: redis:8.10
+    ports:
+      - 6379:6379
+    networks:
+      - event-parser
+  worker:
+    build:
+      dockerfile: dockerfiles/worker/Dockerfile
+      context: .
+      args:
+        ROCM_ARCH: gfx1010
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    security_opt:
+      - "seccomp=unconfined"
+    networks:
+      - event-parser
+    volumes:
+      - ./data:/app/data/
+      - ./evp:/app/evp/
+    environment:
+      - MODEL=data/models/bartowski/mistralai_Ministral-3-3B-Instruct-2512-Q8_0.gguf
+      - MMPROJ=data/models/bartowski/mmproj-mistralai_Ministral-3-3B-Instruct-2512-bf16.gguf
+      - EVP_CELERY_BROKER=redis:6379/0
+      - EVP_CELERY_BACKEND=redis:6379/1
+      - INSTA_ID=se://INSTA_ID
+      - FB_APP_ID=se://FB_APP_ID
+      - FB_APP_SECRET=se://FB_APP_SECRET
+      - FB_TOKEN=se://FB_TOKEN
