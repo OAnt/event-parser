@@ -3,7 +3,6 @@ import logging
 import sys
 
 from evp.core.exceptions import APIException
-from evp.core.pipelines.content import retrieve_media
 from evp.core.llm.llama import describe_concert_flyer
 from evp.insta_api.retrieve_posts import retrieve_posts
 
