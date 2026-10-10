@@ -8,4 +8,4 @@ export FB_TOKEN=$(secret-tool lookup facebook token)
 export MONGO_INITDB_ROOT_USERNAME=$(secret-tool lookup id MONGO_USERNAME)
 export MONGO_INITDB_ROOT_PASSWORD=$(secret-tool lookup id MONGO_PASSWORD)
 export MONGO_PORT=27017
-export MONGO_HOST=mongo
+export MONGO_HOST=localhost
