@@ -1,4 +1,6 @@
 export CMAKE_ARGS="-DGGML_HIP=on"
+export EVP_CELERY_BROKER=localhost:6379/0
+export EVP_CELERY_BACKEND=localhost:6379/1
 export MODEL=data/models/bartowski/mistralai_Ministral-3-3B-Instruct-2512-Q8_0.gguf
 export MMPROJ=data/models/bartowski/mmproj-mistralai_Ministral-3-3B-Instruct-2512-bf16.gguf
 export INSTA_ID=$(security find-generic-password -s instagram -a app-id -w)
