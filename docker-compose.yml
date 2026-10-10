@@ -25,6 +25,9 @@ services:
       context: .
       args:
         ROCM_ARCH: gfx1010
+        POETRY_ARGS: "--with dev"
+        UID: 1000
+        GID: 1000 
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
@@ -49,4 +52,5 @@ services:
       - MONGO_HOST=mongo
       - MONGO_INITDB_ROOT_USERNAME=se://MONGO_USERNAME
       - MONGO_INITDB_ROOT_PASSWORD=se://MONGO_PASSWORD
+    command: ["watchfiles", "--filter", "python", "celery -A evp.workers worker -l INFO -P solo", "/app"]
 

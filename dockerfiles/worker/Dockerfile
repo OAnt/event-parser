@@ -17,14 +17,21 @@ RUN apt-get update \
     amdrocm-core-sdk10.0-${ROCM_ARCH} \
     && rm -rf /var/lib/apt/lists
 RUN mkdir /app/
-COPY poetry.lock /app/
-COPY pyproject.toml /app/
+ARG UID=1000
+ARG GID=1000
+RUN userdel --remove ubuntu 2>/dev/null || true \ 
+    && groupadd --gid ${GID} app \
+    && useradd --uid ${UID} --gid ${GID} --create-home --shell /bin/bash --groups video app
+COPY --chown=app:app poetry.lock /app/
+COPY --chown=app:app pyproject.toml /app/
 WORKDIR /app/
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
     CMAKE_ARGS="-DGGML_HIP=on"
-RUN poetry install --no-root --only main
-COPY evp /app/evp
+ARG POETRY_ARGS="--only main"
+RUN poetry install --no-root ${POETRY_ARGS}
+COPY --chown=app:app evp /app/evp
 ENV LD_LIBRARY_PATH="/opt/rocm/lib:$LD_LIBRARY_PATH"
 ENV PATH="/app/.venv/bin:$PATH"
-ENTRYPOINT ["celery", "-A", "evp.workers", "worker",  "-l", "INFO"]
+USER app
+CMD ["celery", "-A", "evp.workers", "worker",  "-l", "INFO"]
