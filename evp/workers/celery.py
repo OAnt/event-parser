@@ -7,6 +7,7 @@ app = Celery(
     'tasks',
     backend=f"redis://{os.environ.get('EVP_CELERY_BACKEND')}",
     broker=f"redis://{os.environ.get('EVP_CELERY_BROKER')}",
+    include=["evp.workers.pipelines"],
 )
 
 if __name__ == "__main__":

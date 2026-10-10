@@ -2,6 +2,8 @@ from typing import Protocol
 import requests
 
 from evp.core.models.content import RemoteMedia
+from evp.insta_api.retrieve_posts import retrieve_posts
+from evp.workers.celery import app
 
 
 class Writable(Protocol):
@@ -15,3 +17,8 @@ def retrieve_media(remote_media: RemoteMedia, out: Writable, chunk_size: int = 1
             out.write(chunk)
     else:
         raise APIException(f"Could not download {remote_media.url}")
+
+@app.task
+def retrieve_and_store_posts(organization: str):
+    for post in retrieve_posts(organization):
+        print(post)

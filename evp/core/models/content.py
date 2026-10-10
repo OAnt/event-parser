@@ -17,6 +17,6 @@ class LocalMedia(BaseModel):
 
 
 class Post(BaseModel):
-    description: Optional[str]
+    description: Optional[str] = None
     timestamp: Optional[datetime] = None
     media: Union[RemoteMedia, LocalMedia]

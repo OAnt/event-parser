@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class InstagramPost(Post):
-    description: Optional[str] = Field(validation_alias="caption")
+    description: Optional[str] = Field(validation_alias="caption", default=None)
     media_type: Optional[str] = None
     id: str
 
