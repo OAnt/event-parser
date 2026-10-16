@@ -21,4 +21,4 @@ def retrieve_media(remote_media: RemoteMedia, out: Writable, chunk_size: int = 1
 @app.task
 def retrieve_and_store_posts(organization: str):
     for post in retrieve_posts(organization):
-        print(post)
+        post.storage.create_if_missing(post)

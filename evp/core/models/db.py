@@ -1,9 +1,12 @@
 import os
+import logging
 from typing import Any, TypeVar, Type, Generic, Optional
 
 from pydantic import BaseModel
 from pymongo import MongoClient
 from pymongo.collection import Collection
+
+log = logging.getLogger(__name__)
 
 USRNAME = os.getenv("MONGO_INITDB_ROOT_USERNAME")
 PASSWORD = os.getenv("MONGO_INITDB_ROOT_PASSWORD")
@@ -34,6 +37,7 @@ class MongoStorage(Generic[T]):
 
     def ensure_index(self):
         if self.pk_field:
+            log.info(f"creating index on {self.pk_field} for {self.model.__name__}")
             self.collection.create_index(self.pk_field, unique=True)
 
     @property
@@ -63,3 +67,21 @@ class MongoStorage(Generic[T]):
         self.validate_query(**kwargs)
         data = self.collection.find_one(kwargs)
         return self.model(**data)
+
+
+storages = {}
+
+
+def register_model(model: Type[T], *args, **kwargs):
+    if model.__name__ in storages:
+        log.warn(f"{model.__name__} is already registered")
+        return storages[model.__name__]
+    else:
+        storage = MongoStorage(model, *args, **kwargs)
+        storages[model.__name__] = storage
+        return storage
+
+
+def ensure_indexes():
+    for model_name, storage in storages.items():
+        storage.ensure_index()

@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import Optional
+from typing import Optional, ClassVar, Self
 
 import requests
 from pydantic import Field
@@ -7,15 +8,20 @@ from pydantic import Field
 from evp import conf
 from evp.core.exceptions import APIException
 from evp.core.models.content import Post, RemoteMedia
+from evp.core.models.db import register_model, MongoStorage
 
 
 log = logging.getLogger(__name__)
 
 
 class InstagramPost(Post):
+    storage: ClassVar[MongoStorage[InstagramPost]]
     description: Optional[str] = Field(validation_alias="caption", default=None)
     media_type: Optional[str] = None
     id: str
+
+
+InstagramPost.storage = register_model(InstagramPost, "id")
 
 
 def retrieve_posts(organization: str):

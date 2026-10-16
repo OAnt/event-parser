@@ -9,3 +9,5 @@ export MONGO_INITDB_ROOT_USERNAME=$(secret-tool lookup id MONGO_USERNAME)
 export MONGO_INITDB_ROOT_PASSWORD=$(secret-tool lookup id MONGO_PASSWORD)
 export MONGO_PORT=27017
 export MONGO_HOST=localhost
+export EVP_CELERY_BROKER=localhost:6379/0
+export EVP_CELERY_BACKEND=localhost:6379/1

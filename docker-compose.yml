@@ -44,6 +44,7 @@ services:
       - MMPROJ=data/models/bartowski/mmproj-mistralai_Ministral-3-3B-Instruct-2512-bf16.gguf
       - EVP_CELERY_BROKER=redis:6379/0
       - EVP_CELERY_BACKEND=redis:6379/1
+      - EVP_CELERY_PRIMARY=1
       - INSTA_ID=se://INSTA_ID
       - FB_APP_ID=se://FB_APP_ID
       - FB_APP_SECRET=se://FB_APP_SECRET
