@@ -1,10 +1,11 @@
 import os
 import logging
-from typing import Any, TypeVar, Type, Generic, Optional
+from typing import Any, TypeVar, Type, Generic, Optional, List
 
 from pydantic import BaseModel
 from pymongo import MongoClient
 from pymongo.collection import Collection
+from pymongo.results import UpdateResult
 
 log = logging.getLogger(__name__)
 
@@ -45,23 +46,37 @@ class MongoStorage(Generic[T]):
         db = get_mongo_db()
         return db[self.model.__name__]
 
-    def create_if_missing(self, obj: T) -> bool:
-        """
-        create obj if does not exist, returns if was indeed created
-        """
-        _obj = obj.model_dump(mode="json")
-        result = self.collection.update_one(
-            {self.pk_field: getattr(obj, self.pk_field)},
-            {"$setOnInsert": _obj},
-            upsert=True
-        )
-        return bool(not result.matched_count)
-
     def validate_query(self, **kwargs):
         fields = self.model.model_fields
         for key in kwargs:
             if not key in fields:
                 raise KeyError(f"{key} if not a field of model {self.model}")
+
+    def _atomic_operation(self, operation: str, obj: T, update: dict[str, Any], upsert=False) -> UpdateResult:
+        assert self.pk_field, f"{self.model.__name__}, does not have pk, cannot perform atomic operations"
+        result = self.collection.update_one(
+            {self.pk_field: getattr(obj, self.pk_field)},
+            {operation: update},
+            upsert=upsert
+        )
+        return result
+
+    def compare_and_set_field(self, obj: T, fields: List[str]) -> bool:
+        """
+        Set a fields to match obj's, return if any modification where made
+        """
+        update = {field: getattr(obj, field, None) for field in fields}
+        self.validate_query(**update)
+        result = self._atomic_operation("$set", obj, update)
+        return result.modified_count > 0
+
+    def create_if_missing(self, obj: T) -> bool:
+        """
+        create obj if does not exist, returns if was indeed created
+        """
+        _obj = obj.model_dump(mode="json")
+        result = self._atomic_operation("$setOnInsert", obj, _obj, upsert=True)
+        return bool(not result.matched_count)
 
     def get(self, **kwargs):
         self.validate_query(**kwargs)

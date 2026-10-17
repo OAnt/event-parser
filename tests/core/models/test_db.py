@@ -1,9 +1,9 @@
 import importlib
-from types import SimpleNamespace
+import uuid
 
 import pytest
 from pydantic import BaseModel
-from pymongo.errors import PyMongoError
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from evp.core.models import db
 
@@ -87,32 +87,38 @@ def test_mongo_storage_uses_a_collection_named_after_the_model(monkeypatch):
 class Post(BaseModel):
     post_id: str
     caption: str
-
-
-class FakeCollection:
-    def __init__(self, matched_count=0):
-        self.matched_count = matched_count
-        self.update_calls = []
-        self.index_calls = []
-
-    def update_one(self, query, update, upsert=False):
-        self.update_calls.append((query, update, upsert))
-        return SimpleNamespace(matched_count=self.matched_count)
-
-    def create_index(self, field, **kwargs):
-        self.index_calls.append((field, kwargs))
+    likes: int = 0
 
 
 @pytest.fixture
-def fake_collection(monkeypatch):
-    collection = FakeCollection()
+def throwaway_db(monkeypatch):
+    """A randomly named database, dropped after the test, so the configured one
+    is never touched. Skips when MongoDB is not configured or not reachable."""
+    if not db.HOST:
+        pytest.skip("MONGO_HOST is not set")
 
-    class FakeDb:
-        def __getitem__(self, name):
-            return collection
+    client = db.get_mongo_client()
+    try:
+        client.admin.command("ping")
+    except PyMongoError as exc:
+        pytest.skip(f"MongoDB not reachable: {exc}")
 
-    monkeypatch.setattr(db, "get_mongo_db", lambda: FakeDb())
-    return collection
+    name = f"evp_test_{uuid.uuid4().hex}"
+    database = client.get_database(name)
+    monkeypatch.setattr(db, "get_mongo_db", lambda: database)
+    yield database
+    client.drop_database(name)
+
+
+@pytest.fixture
+def storage(throwaway_db):
+    storage = db.MongoStorage(Post, pk_field="post_id")
+    storage.ensure_index()
+    return storage
+
+
+def stored(storage, post_id):
+    return storage.collection.find_one({"post_id": post_id}, {"_id": 0})
 
 
 def test_pk_field_must_be_a_field_of_the_model():
@@ -120,44 +126,54 @@ def test_pk_field_must_be_a_field_of_the_model():
         db.MongoStorage(Post, pk_field="nope")
 
 
-def test_ensure_index_creates_a_unique_index_on_the_pk_field(fake_collection):
-    db.MongoStorage(Post, pk_field="post_id").ensure_index()
-
-    assert fake_collection.index_calls == [("post_id", {"unique": True})]
-
-
-def test_ensure_index_does_nothing_without_a_pk_field(fake_collection):
-    db.MongoStorage(Post).ensure_index()
-
-    assert fake_collection.index_calls == []
-
-
-def test_create_if_missing_returns_true_when_the_object_was_created(fake_collection):
-    fake_collection.matched_count = 0
+def test_ensure_index_creates_a_unique_index_on_the_pk_field(throwaway_db):
     storage = db.MongoStorage(Post, pk_field="post_id")
 
+    storage.ensure_index()
+
+    indexes = storage.collection.index_information()
+    assert any(
+        info["key"] == [("post_id", 1)] and info.get("unique") for info in indexes.values()
+    )
+
+
+def test_ensure_index_does_nothing_without_a_pk_field(throwaway_db):
+    storage = db.MongoStorage(Post)
+
+    storage.ensure_index()
+
+    assert list(storage.collection.index_information()) in ([], ["_id_"])
+
+
+def test_unique_index_rejects_duplicate_pks(storage):
+    storage.collection.insert_one({"post_id": "1", "caption": "a"})
+
+    with pytest.raises(DuplicateKeyError):
+        storage.collection.insert_one({"post_id": "1", "caption": "b"})
+
+
+def test_create_if_missing_returns_true_when_the_object_was_created(storage):
     assert storage.create_if_missing(Post(post_id="1", caption="hi")) is True
 
 
-def test_create_if_missing_returns_false_when_the_object_already_exists(fake_collection):
-    fake_collection.matched_count = 1
-    storage = db.MongoStorage(Post, pk_field="post_id")
+def test_create_if_missing_returns_false_when_the_object_already_exists(storage):
+    storage.create_if_missing(Post(post_id="1", caption="hi"))
 
     assert storage.create_if_missing(Post(post_id="1", caption="hi")) is False
 
 
-def test_create_if_missing_upserts_on_pk_with_set_on_insert(fake_collection):
-    storage = db.MongoStorage(Post, pk_field="post_id")
+def test_create_if_missing_stores_the_whole_object(storage):
+    storage.create_if_missing(Post(post_id="1", caption="hi", likes=3))
 
-    storage.create_if_missing(Post(post_id="1", caption="hi"))
+    assert stored(storage, "1") == {"post_id": "1", "caption": "hi", "likes": 3}
 
-    assert fake_collection.update_calls == [
-        (
-            {"post_id": "1"},
-            {"$setOnInsert": {"post_id": "1", "caption": "hi"}},
-            True,
-        )
-    ]
+
+def test_create_if_missing_does_not_overwrite_an_existing_object(storage):
+    storage.create_if_missing(Post(post_id="1", caption="first"))
+    storage.create_if_missing(Post(post_id="1", caption="second"))
+
+    assert storage.collection.count_documents({}) == 1
+    assert stored(storage, "1")["caption"] == "first"
 
 
 def test_validate_query_accepts_model_fields():
@@ -167,3 +183,75 @@ def test_validate_query_accepts_model_fields():
 def test_validate_query_rejects_unknown_fields():
     with pytest.raises(KeyError, match="nope"):
         db.MongoStorage(Post).validate_query(nope="x")
+
+
+def test_compare_and_set_field_updates_the_requested_field(storage):
+    storage.create_if_missing(Post(post_id="1", caption="old", likes=3))
+
+    res = storage.compare_and_set_field(
+        Post(post_id="1", caption="new", likes=99), ["caption"]
+    )
+
+    assert res
+    
+    assert stored(storage, "1") == {"post_id": "1", "caption": "new", "likes": 3}
+
+def test_compare_and_set_field_reports_not_updating_at_field(storage):
+    storage.create_if_missing(Post(post_id="1", caption="old", likes=3))
+
+    res = storage.compare_and_set_field(
+        Post(post_id="1", caption="old", likes=99), ["caption"]
+    )
+
+    assert not res
+    
+    assert stored(storage, "1") == {"post_id": "1", "caption": "old", "likes": 3}
+
+
+def test_compare_and_set_field_can_set_several_fields(storage):
+    storage.create_if_missing(Post(post_id="1", caption="old", likes=3))
+
+    res = storage.compare_and_set_field(
+        Post(post_id="1", caption="new", likes=99), ["caption", "likes"]
+    )
+
+    assert res
+
+    assert stored(storage, "1") == {"post_id": "1", "caption": "new", "likes": 99}
+
+
+def test_compare_and_set_field_does_not_create_a_missing_document(storage):
+    res = storage.compare_and_set_field(
+        Post(post_id="1", caption="hi", likes=5), ["caption"]
+    )
+
+    assert not res
+
+    assert storage.collection.count_documents({}) == 0
+
+
+def test_compare_and_set_field_does_not_touch_other_documents(storage):
+    storage.create_if_missing(Post(post_id="1", caption="one"))
+    storage.create_if_missing(Post(post_id="2", caption="two"))
+
+    res = storage.compare_and_set_field(Post(post_id="1", caption="changed"), ["caption"])
+
+    assert res
+
+    assert stored(storage, "2") == {"post_id": "2", "caption": "two", "likes": 0}
+
+
+def test_compare_and_set_field_rejects_unknown_fields_without_writing(storage):
+    with pytest.raises(KeyError, match="nope"):
+        storage.compare_and_set_field(Post(post_id="1", caption="hi"), ["nope"])
+
+    assert storage.collection.count_documents({}) == 0
+
+
+def test_compare_and_set_field_requires_a_pk_field(throwaway_db):
+    storage = db.MongoStorage(Post)
+
+    with pytest.raises(AssertionError):
+        storage.compare_and_set_field(Post(post_id="1", caption="hi"), ["caption"])
+
+    assert storage.collection.count_documents({}) == 0
