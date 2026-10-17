@@ -25,7 +25,7 @@ def get_llm() -> Llama:
         )
     return _llm
 
-def describe_concert_flyer(post: Post):
+def describe_concert_flyer(post: Post) -> Flyer:
     llm = get_llm()
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},

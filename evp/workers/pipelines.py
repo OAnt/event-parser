@@ -1,7 +1,9 @@
 from typing import Protocol
 import requests
 
-from evp.core.models.content import RemoteMedia
+from evp.core.models.content import RemoteMedia, Post
+from evp.core.models.events import Flyer
+from evp.core.llm.llama import describe_concert_flyer
 from evp.insta_api.retrieve_posts import retrieve_posts
 from evp.workers.celery import app
 
@@ -18,7 +20,13 @@ def retrieve_media(remote_media: RemoteMedia, out: Writable, chunk_size: int = 1
     else:
         raise APIException(f"Could not download {remote_media.url}")
 
+
 @app.task
-def retrieve_and_store_posts(organization: str):
-    for post in retrieve_posts(organization):
+def retrieve_and_store_posts(organization: str, *args, **kwargs):
+    for post in retrieve_posts(organization, *args, **kwargs):
         post.storage.create_if_missing(post)
+
+
+@app.task(queue="llama", pydantic=True)
+def convert_post_to_flyer(post: Post) -> Flyer:
+    return describe_concert_flyer(post)
