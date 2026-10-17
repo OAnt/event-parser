@@ -29,4 +29,5 @@ def retrieve_and_store_posts(organization: str, *args, **kwargs):
 
 @app.task(queue="llama", pydantic=True)
 def convert_post_to_flyer(post: Post) -> Flyer:
-    return describe_concert_flyer(post)
+    flyer = describe_concert_flyer(post)
+    return flyer

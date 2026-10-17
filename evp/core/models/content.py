@@ -1,8 +1,9 @@
 import os
+from enum import IntEnum
 from datetime import datetime
 from typing import Union, Optional
 
-from pydantic import BaseModel, HttpUrl, FilePath
+from pydantic import BaseModel, HttpUrl, FilePath, Field
 
 class RemoteMedia(BaseModel):
     url: HttpUrl
@@ -16,7 +17,14 @@ class LocalMedia(BaseModel):
         return f"file://{os.path.abspath(self.path)}"
 
 
+class StateEnum(IntEnum):
+    retrieved = 0
+    ingested = 1
+    processed = 2
+
+
 class Post(BaseModel):
     description: Optional[str] = None
     timestamp: Optional[datetime] = None
     media: Union[RemoteMedia, LocalMedia]
+    state: StateEnum = Field(default=StateEnum.retrieved)
