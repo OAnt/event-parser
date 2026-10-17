@@ -12,6 +12,7 @@ app = Celery(
     broker=f"redis://{os.environ.get('EVP_CELERY_BROKER')}",
     include=["evp.workers.pipelines"],
 )
+app.conf.task_default_queue = "generic"
 
 
 primary = os.environ.get('EVP_CELERY_PRIMARY', False)
