@@ -1,5 +1,5 @@
 from typing import Union
-from evp.core.models.content import Post
+from evp.core.models.content import Post, QualityEnum
 
 JSON_SCHEMA = {
     "type": "object",
@@ -54,6 +54,49 @@ def get_user_message(post: Post):
         )
     base_message.extend([
         {"type": "text", "text": "Describe the image\n"},
+        {"type": "image_url", "image_url": {"url": str(post.media.url)}},
+    ])
+    return base_message
+
+JSON_SCHEMA_QUALITY = {
+    "type": "object",
+    "properties": {
+        "reasoning": {"type": "string"},
+        "relevant": {"type": "boolean"},
+        "high_quality": {"type": "boolean"},
+    },
+}
+
+SYSTEM_PROMPT_QUALITY = """
+You are an assistant expert at classifying posts for concert flyers.
+You tell if a post relates to a concert.
+You tell if the post description matches the flyer.
+    - It mentions the place (It may be inferred from the account)
+    - The date
+    - The artists
+You return the result as directly usable json.
+The schema is
+{
+    reasoning: "<describe your thoughts here before filling the rest NO MULTI LINE STRINGS>"
+    relevant: "<True / False, is it a concert flyer or not>"
+    high_quality: "<True / False, the post has a description and it contains the same information as the flyer>"
+}
+
+Only report high_quality if both the description and the image agree on:
+    - the same place
+    - the same date
+    - the same artists 
+(custom font may make the name harder to compare, I tolerate small spelling mistake)
+"""
+
+def get_user_message_quality(post: Post):
+    base_message = []
+    if post.description:
+        base_message.append(
+            {"type": "text", "text": f"description: {post.description}\n"}
+        )
+    base_message.extend([
+        {"type": "text", "text": "Rate this post\n"},
         {"type": "image_url", "image_url": {"url": str(post.media.url)}},
     ])
     return base_message

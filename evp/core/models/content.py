@@ -21,14 +21,27 @@ class LocalMedia(BaseModel):
 
 class StateEnum(IntEnum):
     retrieved = 0
-    ingested = 1
-    processed = 2
+    rated = 20
+    ingested = 30
+    processed = 40
+
+class QualityEnum(IntEnum):
+    unknown = 0
+    irrelevant = 10
+    low_quality = 20
+    high_quality = 30
+    failed = 40
 
 class Post(BaseModel, StoredModelMixin):
     description: Optional[str] = None
     timestamp: Optional[datetime] = None
     media: Union[RemoteMedia, LocalMedia]
     state: StateEnum = Field(default=StateEnum.retrieved)
+    quality: QualityEnum = Field(default=QualityEnum.unknown)
+
+    def rate(self):
+        self.state = StateEnum.rated
+        return self.storage.compare_and_set_field(self, ["state"])
 
     def ingest(self):
         self.state = StateEnum.ingested
