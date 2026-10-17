@@ -49,6 +49,8 @@ def retrieve_posts(organization: str, limit:int = 25, pages: int = 1):
                     media=media, account=organization, **post
                 )
                 yield instagram_post
+            if not "paging" in data["business_discovery"]["media"]:
+                break
             after = data["business_discovery"]["media"]["paging"]["cursors"].get("after", None)
             if after:
                 log.info(f"found next page {after}")
