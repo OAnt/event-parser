@@ -27,11 +27,11 @@ COPY --chown=app:app pyproject.toml /app/
 WORKDIR /app/
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
-    CMAKE_ARGS="-DGGML_HIP=on"
+    CMAKE_ARGS="-DGGML_HIP=on -DAMDGPU_TARGETS=${ROCM_ARCH}"
 ARG POETRY_ARGS="--only main"
 RUN poetry install --no-root ${POETRY_ARGS}
 COPY --chown=app:app evp /app/evp
-ENV LD_LIBRARY_PATH="/opt/rocm/lib:$LD_LIBRARY_PATH"
 ENV PATH="/app/.venv/bin:$PATH"
 USER app
+ENV LD_LIBRARY_PATH="/opt/rocm/lib:$LD_LIBRARY_PATH"
 CMD ["celery", "-A", "evp.workers", "worker",  "-l", "INFO"]
