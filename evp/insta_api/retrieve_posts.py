@@ -24,11 +24,11 @@ class InstagramPost(Post):
 InstagramPost.storage = register_model(InstagramPost, "id")
 
 
-def retrieve_posts(organization: str, limit:int = 25, page_count: int = 1):
+def retrieve_posts(organization: str, limit:int = 25, pages: int = 1):
     url = f"{conf.GRAPH}/{conf.INSTA_ID}"
     _media_insta_spec = f"media.limit({limit})"
     media_insta_spec = _media_insta_spec
-    for i in range(0, page_count):
+    for i in range(0, pages):
         search_string = "business_discovery.username(%s){%s{caption,media_url,timestamp,media_type}}" % (
             organization, media_insta_spec
         )

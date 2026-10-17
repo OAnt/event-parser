@@ -1,14 +1,12 @@
-{
-    "accounts": [
-        {
-            "name": "account-name",
-            "limit": 20,
-            "pages": 2
-        },
-        {
-            "name": "another-name",
-            "limit": 25,
-            "pages": 1
-        }
-    ]
-}
+ [
+    {
+        "name": "account-name",
+        "limit": 20,
+        "pages": 2
+    },
+    {
+        "name": "another-name",
+        "limit": 25,
+        "pages": 1
+    }
+]
