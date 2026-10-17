@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 
 class InstagramPost(Post):
-    description: Optional[str] = Field(validation_alias="caption", default=None)
     media_type: Optional[str] = None
     id: str
     account: str
@@ -45,8 +44,9 @@ def retrieve_posts(organization: str, limit:int = 25, pages: int = 1):
             log.info(f"found {len(posts)} for {organization}")
             for post in filter(lambda x: "media_url" in x, posts):
                 media = RemoteMedia(url=post.pop("media_url"))
+                description = post.pop("caption", None)
                 instagram_post = InstagramPost(
-                    media=media, account=organization, **post
+                    media=media, account=organization, description=description, **post
                 )
                 yield instagram_post
             if not "paging" in data["business_discovery"]["media"]:
