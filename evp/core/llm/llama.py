@@ -22,6 +22,7 @@ def get_llm() -> Llama:
             chat_handler=chat_handler,
             chat_format="mtmd",
             n_ctx=4096,
+            n_gpu_layers=-1,
         )
     return _llm
 

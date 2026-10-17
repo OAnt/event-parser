@@ -1,5 +1,6 @@
 import os
 import logging
+from abc import ABC, abstractmethod
 from typing import Any, TypeVar, Type, Generic, Optional, List, ClassVar
 
 from pydantic import BaseModel
@@ -84,11 +85,17 @@ class MongoStorage(Generic[T]):
         return self.model(**data)
 
 
-class StoredModelMixin:
+class StoredModelMixin(ABC):
     storage: ClassVar[MongoStorage[T]]
+
+    @abstractmethod
+    def model_dump(self, *args, **kwargs):...
 
     def create_if_missing(self):
         return self.storage.create_if_missing(self)
+
+    def insert(self):
+        self.storage.collection.insert_one(self.model_dump(mode="json"))
 
 
 storages = {}

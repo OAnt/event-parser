@@ -29,3 +29,11 @@ class Post(BaseModel, StoredModelMixin):
     timestamp: Optional[datetime] = None
     media: Union[RemoteMedia, LocalMedia]
     state: StateEnum = Field(default=StateEnum.retrieved)
+
+    def ingest(self):
+        self.state = StateEnum.ingested
+        return self.storage.compare_and_set_field(self, ["state"])
+
+    def rewind(self):
+        self.state = StateEnum.retrieved
+        return self.storage.compare_and_set_field(self, ["state"])

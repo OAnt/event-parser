@@ -1,10 +1,10 @@
 from typing import Protocol
 import requests
 
-from evp.core.models.content import RemoteMedia, Post
+from evp.core.models.content import RemoteMedia, StateEnum
 from evp.core.models.events import Flyer
 from evp.core.llm.llama import describe_concert_flyer
-from evp.insta_api.retrieve_posts import retrieve_posts
+from evp.insta_api.retrieve_posts import retrieve_posts, InstagramPost
 from evp.workers.celery import app
 
 
@@ -28,6 +28,7 @@ def retrieve_and_store_posts(organization: str, *args, **kwargs):
 
 
 @app.task(queue="llama", pydantic=True)
-def convert_post_to_flyer(post: Post) -> Flyer:
-    flyer = describe_concert_flyer(post)
-    return flyer
+def convert_post_to_flyer(post: InstagramPost) -> Flyer:
+    if post.state == StateEnum.retrieved and post.ingest():
+        flyer = describe_concert_flyer(post)
+        flyer.insert()
