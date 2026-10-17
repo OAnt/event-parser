@@ -1,5 +1,6 @@
 import importlib
 import uuid
+from typing import Optional
 
 import pytest
 from pydantic import BaseModel
@@ -195,6 +196,17 @@ def test_compare_and_set_field_updates_the_requested_field(storage):
     assert res
     
     assert stored(storage, "1") == {"post_id": "1", "caption": "new", "likes": 3}
+
+def test_compare_and_set_field_creates_missing_field(storage):
+    storage.collection.insert_one(dict(post_id="1", caption="new"))
+
+    res = storage.compare_and_set_field(
+        Post(post_id="1", caption="old", likes=99), ["likes"]
+    )
+
+    assert res
+    
+    assert stored(storage, "1") == {"post_id": "1", "caption": "new", "likes": 99}
 
 def test_compare_and_set_field_reports_not_updating_at_field(storage):
     storage.create_if_missing(Post(post_id="1", caption="old", likes=3))

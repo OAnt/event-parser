@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from typing import Optional, ClassVar, Self
+from typing import Optional, Self
 
 import requests
 from pydantic import Field
@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 
 class InstagramPost(Post):
-    storage: ClassVar[MongoStorage[InstagramPost]]
     description: Optional[str] = Field(validation_alias="caption", default=None)
     media_type: Optional[str] = None
     id: str

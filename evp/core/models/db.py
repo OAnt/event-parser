@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, TypeVar, Type, Generic, Optional, List
+from typing import Any, TypeVar, Type, Generic, Optional, List, ClassVar
 
 from pydantic import BaseModel
 from pymongo import MongoClient
@@ -82,6 +82,13 @@ class MongoStorage(Generic[T]):
         self.validate_query(**kwargs)
         data = self.collection.find_one(kwargs)
         return self.model(**data)
+
+
+class StoredModelMixin:
+    storage: ClassVar[MongoStorage[T]]
+
+    def create_if_missing(self):
+        return self.storage.create_if_missing(self)
 
 
 storages = {}

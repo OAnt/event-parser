@@ -5,6 +5,8 @@ from typing import Union, Optional
 
 from pydantic import BaseModel, HttpUrl, FilePath, Field
 
+from evp.core.models.db import StoredModelMixin 
+
 class RemoteMedia(BaseModel):
     url: HttpUrl
 
@@ -22,8 +24,7 @@ class StateEnum(IntEnum):
     ingested = 1
     processed = 2
 
-
-class Post(BaseModel):
+class Post(BaseModel, StoredModelMixin):
     description: Optional[str] = None
     timestamp: Optional[datetime] = None
     media: Union[RemoteMedia, LocalMedia]
