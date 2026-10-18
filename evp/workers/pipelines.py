@@ -28,12 +28,12 @@ def retrieve_and_store_posts(organization: str, *args, **kwargs):
 
 @app.task(queue="llama", pydantic=True)
 def rate_post_quality(post: InstagramPost):
-    if post.state == StateEnum.retrieved and post.rate():
+    if not post.state.rated and post.rate():
         post.quality = rate_post(post)
         post.storage.compare_and_set_field(post, ["quality"])
 
 @app.task(queue="llama", pydantic=True)
 def convert_post_to_flyer(post: InstagramPost):
-    if post.state == StateEnum.rated and post.ingest():
+    if not post.state.ingested and post.ingest():
         flyer = describe_concert_flyer(post)
         flyer.insert()

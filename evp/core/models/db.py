@@ -51,7 +51,7 @@ class MongoStorage(Generic[T]):
         fields = self.model.model_fields
         for key in kwargs:
             if not key in fields:
-                raise KeyError(f"{key} if not a field of model {self.model}")
+                raise AttributeError(f"{key} if not a field of model {self.model}")
 
     def _atomic_operation(self, operation: str, obj: T, update: dict[str, Any], upsert=False) -> UpdateResult:
         assert self.pk_field, f"{self.model.__name__}, does not have pk, cannot perform atomic operations"
@@ -66,8 +66,15 @@ class MongoStorage(Generic[T]):
         """
         Set a fields to match obj's, return if any modification where made
         """
-        update = {field: getattr(obj, field, None) for field in fields}
-        self.validate_query(**update)
+        update = {}
+        for field in fields:
+            _obj = obj
+            for subfield in field.split("."):
+                try:
+                    _obj = getattr(_obj, subfield)
+                except AttributeError:
+                    raise AttributeError(f"{subfield} is not a member of {_obj}")
+            update[field] = _obj
         result = self._atomic_operation("$set", obj, update)
         return result.modified_count > 0
 

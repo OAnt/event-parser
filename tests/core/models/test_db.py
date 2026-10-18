@@ -182,7 +182,7 @@ def test_validate_query_accepts_model_fields():
 
 
 def test_validate_query_rejects_unknown_fields():
-    with pytest.raises(KeyError, match="nope"):
+    with pytest.raises(AttributeError, match="nope"):
         db.MongoStorage(Post).validate_query(nope="x")
 
 
@@ -232,6 +232,30 @@ def test_compare_and_set_field_can_set_several_fields(storage):
     assert stored(storage, "1") == {"post_id": "1", "caption": "new", "likes": 99}
 
 
+def test_compare_and_set_field_can_set_a_dotted_key(throwaway_db):
+    class State(BaseModel):
+        rated: bool = False
+        seen: bool = False
+
+    class Rated(BaseModel):
+        post_id: str
+        state: State = State()
+
+    storage = db.MongoStorage(Rated, pk_field="post_id")
+    storage.create_if_missing(Rated(post_id="1"))
+
+    res = storage.compare_and_set_field(
+        Rated(post_id="1", state=State(rated=True, seen=True)), ["state.rated"]
+    )
+
+    assert res
+
+    assert stored(storage, "1") == {
+        "post_id": "1",
+        "state": {"rated": True, "seen": False},
+    }
+
+
 def test_compare_and_set_field_does_not_create_a_missing_document(storage):
     res = storage.compare_and_set_field(
         Post(post_id="1", caption="hi", likes=5), ["caption"]
@@ -254,7 +278,7 @@ def test_compare_and_set_field_does_not_touch_other_documents(storage):
 
 
 def test_compare_and_set_field_rejects_unknown_fields_without_writing(storage):
-    with pytest.raises(KeyError, match="nope"):
+    with pytest.raises(AttributeError, match="nope"):
         storage.compare_and_set_field(Post(post_id="1", caption="hi"), ["nope"])
 
     assert storage.collection.count_documents({}) == 0
