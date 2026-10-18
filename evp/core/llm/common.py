@@ -40,6 +40,7 @@ You return always return a list, each item is a concert on the flyer
 You return an empty object if the image is not a concert flyer or is unavailable
 The organizer may have added a description for the event.
 It is commonly accepted that an event takes place after it is published...
+Do not add reasoning to performer names, use the reasoning field
 """
 
 def get_user_message(post: Post):

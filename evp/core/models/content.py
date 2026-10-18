@@ -49,8 +49,8 @@ class Post(BaseModel, StoredModelMixin):
 
     def ingest(self):
         self.state.ingested = True
-        return self.storage.compare_and_set_field(self, ["state"])
+        return self.storage.compare_and_set_field(self, ["state.ingested"])
 
     def rewind(self):
         self.state.ingested = False
-        return self.storage.compare_and_set_field(self, ["state"])
+        return self.storage.compare_and_set_field(self, ["state.ingested"])
