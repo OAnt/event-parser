@@ -1,9 +1,10 @@
 import os
 import logging
+import uuid
 from abc import ABC, abstractmethod
 from typing import Any, TypeVar, Type, Generic, Optional, List, ClassVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4, Field
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.results import UpdateResult
@@ -38,6 +39,9 @@ class MongoStorage(Generic[T]):
         self.pk_field = pk_field
 
     def ensure_index(self):
+        if hasattr(self.model, "uuid"):
+            log.info(f"creating index on uuid for {self.model.__name__}")
+            self.collection.create_index("uuid", unique=True)
         if self.pk_field:
             log.info(f"creating index on {self.pk_field} for {self.model.__name__}")
             self.collection.create_index(self.pk_field, unique=True)
@@ -93,6 +97,7 @@ class MongoStorage(Generic[T]):
 
 
 class StoredModelMixin(ABC):
+    uuid: UUID4 = Field(default_factory=uuid.uuid4)
     storage: ClassVar[MongoStorage[T]]
 
     @abstractmethod
