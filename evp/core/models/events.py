@@ -3,7 +3,7 @@ import datetime
 from typing import Optional, List
 from pydantic import BaseModel
 
-from evp.core.models.db import StoredModelMixin, register_model
+from evp.core.models.db import StoredModelMixin, register_model, Reference
 
 # I decided to store both Flyer and Event because different Flyers
 # may report the same event, I need to add a duplicate detection
@@ -17,12 +17,10 @@ class Event(BaseModel, StoredModelMixin):
     performers: List[str]
 
 
-Event.storage = register_model(Event)
-
-
 class Flyer(BaseModel, StoredModelMixin):
     reasoning: Optional[str]
     events: List[Event]
+    source: Optional[Reference] = None
 
 
 Flyer.storage = register_model(Flyer)

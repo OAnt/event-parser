@@ -96,6 +96,11 @@ class MongoStorage(Generic[T]):
         return self.model(**data)
 
 
+class Reference(BaseModel):
+    model: str
+    uuid: UUID4
+
+
 class StoredModelMixin(ABC):
     uuid: UUID4 = Field(default_factory=uuid.uuid4)
     storage: ClassVar[MongoStorage[T]]
@@ -108,6 +113,10 @@ class StoredModelMixin(ABC):
 
     def insert(self):
         self.storage.collection.insert_one(self.model_dump(mode="json"))
+
+    @property
+    def reference(self):
+        return Reference(uuid=self.uuid, model=type(self).__name__)
 
 
 storages = {}

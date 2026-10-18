@@ -1,6 +1,7 @@
 from typing import Protocol
 import requests
 
+from evp.core.models.db import Reference
 from evp.core.models.content import RemoteMedia, StateEnum, QualityEnum
 from evp.core.models.events import Flyer
 from evp.core.llm.llama import describe_concert_flyer, rate_post
@@ -36,4 +37,5 @@ def rate_post_quality(post: InstagramPost):
 def convert_post_to_flyer(post: InstagramPost):
     if not post.state.ingested and post.ingest():
         flyer = describe_concert_flyer(post)
+        flyer.source = post.reference
         flyer.insert()
